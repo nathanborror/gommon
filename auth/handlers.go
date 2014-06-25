@@ -77,6 +77,7 @@ func AuthHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if IsAuthenticated(r) == true {
 			fn(w, r)
+			return
 		}
 		http.Redirect(w, r, "/register", http.StatusFound)
 	}
