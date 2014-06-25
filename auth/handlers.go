@@ -75,7 +75,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 // AuthHandler allows you to check for a logged in user on any handler
 func AuthHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if IsAuthenticated(r) == true {
+		if IsAuthenticated(r) {
 			fn(w, r)
 			return
 		}
