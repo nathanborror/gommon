@@ -72,8 +72,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	render.RenderTemplate(w, "auth_register", nil)
 }
 
-// AuthHandler allows you to check for a logged in user on any handler
-func AuthHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+// LoginRequired allows you to check for a logged in user on any handler
+func LoginRequired(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if IsAuthenticated(r) {
 			fn(w, r)
