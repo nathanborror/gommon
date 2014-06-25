@@ -1,4 +1,4 @@
-# Gomon
+# Gommon
 
 Gommon is a set of packages for quickly developing Go applications.
 
