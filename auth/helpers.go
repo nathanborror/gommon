@@ -61,3 +61,14 @@ func IsAuthenticated(r *http.Request) bool {
 	}
 	return false
 }
+
+// GetAuthenticatedUser returns a User object for an authenticated user
+func GetAuthenticatedUser(r *http.Request) (*User, error) {
+	session, _ := store.Get(r, "authenticated-user")
+	hash := session.Values["hash"]
+	u, err := repo.Load(hash.(string))
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}

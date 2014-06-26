@@ -3,17 +3,24 @@ package render
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/russross/blackfriday"
 	"net/http"
 	"regexp"
 	"text/template"
+
+	"github.com/gorilla/sessions"
+	"github.com/russross/blackfriday"
 )
 
 var funcMap = template.FuncMap{
-	"markdown": markDowner,
-	"initials": initials,
+	"markdown":        markDowner,
+	"initials":        initials,
+	"isAuthenticated": isAuthenticated,
 }
 
+var store = sessions.NewCookieStore([]byte("something-very-very-secret"))
+
+// Render returns a rendered template or JSON depending on the origin
+// of the request
 func Render(w http.ResponseWriter, r *http.Request, tmpl string, context interface{}) {
 	// TOOD: There is a better way to detect XHR requests,
 	// this is not that way.
@@ -54,4 +61,12 @@ func initials(args ...interface{}) string {
 	s := fmt.Sprintf("%s", args...)
 	re := regexp.MustCompile("[^A-Z]")
 	return re.ReplaceAllString(s, "")
+}
+
+func isAuthenticated(r *http.Request) bool {
+	session, _ := store.Get(r, "authenticated-user")
+	if session.Values["hash"] != nil {
+		return true
+	}
+	return false
 }
