@@ -23,3 +23,9 @@ of rendering it's given template.
 
 There's also a handy filter to help with rendering markdown inside templates
 using the Blackfriday package (github.com/russross/blackfriday).
+
+## Hubspoke
+
+Hubspoke is a basic websocket implementation using the Gorilla WebSocket toolkit. 
+It's based off the [chat example](https://github.com/gorilla/websocket/tree/master/examples/chat)
+but adds a simple pub/sub model for clients to subscribe to urls and receive updates.
