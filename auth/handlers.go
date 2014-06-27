@@ -17,7 +17,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			u = &User{Email: email}
 			render.RenderTemplate(w, "auth_register", map[string]interface{}{
-				"user": u,
+				"request": r,
+				"user":    u,
 			})
 			return
 		}
