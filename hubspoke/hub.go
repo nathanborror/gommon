@@ -123,7 +123,6 @@ func (h *hub) handleMessage(conn *connection, m Message) {
 			log.Println(err)
 			return
 		}
-		log.Println(string(body))
 		h.sendToChannel(m.URL, body)
 	}
 }
