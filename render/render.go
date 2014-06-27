@@ -11,13 +11,13 @@ import (
 	"github.com/russross/blackfriday"
 )
 
+var store = sessions.NewCookieStore([]byte("something-very-very-secret"))
+
 var funcMap = template.FuncMap{
 	"markdown":        markDowner,
 	"initials":        initials,
 	"isAuthenticated": isAuthenticated,
 }
-
-var store = sessions.NewCookieStore([]byte("something-very-very-secret"))
 
 // Render returns a rendered template or JSON depending on the origin
 // of the request
@@ -65,7 +65,8 @@ func initials(args ...interface{}) string {
 
 func isAuthenticated(r *http.Request) bool {
 	session, _ := store.Get(r, "authenticated-user")
-	if session.Values["hash"] != nil {
+	hash := session.Values["hash"]
+	if hash != nil {
 		return true
 	}
 	return false
