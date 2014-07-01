@@ -43,20 +43,18 @@ func (s subscriptions) remove(c *connection) {
 	}
 }
 
-// Action represents...
-type Action string
+type action string
 
+// Subscribe subscribes someone to receive updates for
+// a particular url. Request ...
 const (
-	// Request represents ...
-	Request Action = "request"
-	// Subscribe represents ...
-	Subscribe = "subscribe"
+	Request   action = "request"
+	Subscribe        = "subscribe"
 )
 
-// Message expects a url and an operation (request or broadcast)
-type Message struct {
-	URL    string
-	Action Action
+type message struct {
+	url    string
+	Action action
 }
 
 type wsResponse struct {
@@ -65,7 +63,7 @@ type wsResponse struct {
 }
 
 func (h *hub) sendToChannel(channel string, message []byte) {
-	// Only send to clients subscribed to the request URL
+	// Only send to clients subscribed to the request url
 	subscriptions, ok := h.subscriptions[channel]
 	if !ok {
 		log.Printf("No subscriptions for '%s'\n", channel)
@@ -91,16 +89,16 @@ func (h *hub) sendToChannel(channel string, message []byte) {
 	}
 }
 
-func (h *hub) handleMessage(conn *connection, m Message) {
+func (h *hub) handleMessage(conn *connection, m message) {
 	switch m.Action {
 	case Subscribe:
-		h.subscriptions.add(m.URL, conn)
-		log.Println("Adding subscription to", m.URL, "for", conn.User.Hash)
+		h.subscriptions.add(m.url, conn)
+		log.Println("Adding subscription to", m.url, "for", conn.User.Hash)
 
 	// Request actions perform an internal GET request and send the results to
 	// all subscribed clients
 	case Request:
-		req, err := http.NewRequest("GET", "http://localhost:8080"+m.URL, nil)
+		req, err := http.NewRequest("GET", "http://localhost:8080"+m.url, nil)
 		if err != nil {
 			log.Println(err)
 			return
@@ -125,7 +123,7 @@ func (h *hub) handleMessage(conn *connection, m Message) {
 			log.Println(err)
 			return
 		}
-		h.sendToChannel(m.URL, body)
+		h.sendToChannel(m.url, body)
 	}
 }
 
@@ -140,7 +138,7 @@ func (h *hub) Run() {
 			close(c.send)
 			h.subscriptions.remove(c)
 		case r := <-h.incoming:
-			var m Message
+			var m message
 			// TODO: handle unmarshalling errors
 			json.Unmarshal(r.message, &m)
 			h.handleMessage(r.connection, m)
