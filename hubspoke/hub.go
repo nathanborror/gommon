@@ -1,3 +1,6 @@
+// Package hubspoke is a basic WebSocket publish / subscribe toolkit. It builds
+// off of gorilla/websocket's chat example. Clients can subscribe to URLs and
+// receive updates when they change.
 package hubspoke
 
 import (
@@ -7,8 +10,6 @@ import (
 	"net/http"
 )
 
-// hub maintains the set of active connections and broadcasts messages to the
-// connections.
 type hub struct {
 	connections   map[*connection]bool // Registered connections
 	incoming      chan wsRequest       // Inbound messages from the connections
@@ -17,12 +18,13 @@ type hub struct {
 	subscriptions subscriptions
 }
 
-// H represents a WebSocket hub
-var H = hub{
+// Hub maintains the set of active connections and broadcasts messages to
+// subscribers. Use the Run function to start the Hub (i.e go hubspoke.Hub.Run())
+var Hub = hub{
+	connections:   make(map[*connection]bool),
 	incoming:      make(chan wsRequest),
 	register:      make(chan *connection),
 	unregister:    make(chan *connection),
-	connections:   make(map[*connection]bool),
 	subscriptions: subscriptions{},
 }
 
@@ -127,6 +129,7 @@ func (h *hub) handleMessage(conn *connection, m Message) {
 	}
 }
 
+// Run starts the WebSocket.
 func (h *hub) Run() {
 	for {
 		select {

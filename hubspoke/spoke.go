@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+
 	"github.com/gorilla/websocket"
 	"github.com/nathanborror/gommon/auth"
 )
@@ -37,7 +38,7 @@ type wsRequest struct {
 // readPump pumps messages from the websocket connection to the hub.
 func (c *connection) readPump() {
 	defer func() {
-		H.unregister <- c
+		Hub.unregister <- c
 		c.ws.Close()
 	}()
 	c.ws.SetReadLimit(maxMessageSize)
@@ -48,7 +49,7 @@ func (c *connection) readPump() {
 		if err != nil {
 			break
 		}
-		H.incoming <- wsRequest{c, message}
+		Hub.incoming <- wsRequest{c, message}
 	}
 }
 
@@ -115,7 +116,7 @@ func SpokeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create connection
 	c := &connection{send: make(chan []byte, 256), ws: ws, User: u, Cookie: cookie}
-	H.register <- c
+	Hub.register <- c
 	go c.writePump()
 	c.readPump()
 }
