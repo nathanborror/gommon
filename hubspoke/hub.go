@@ -53,7 +53,7 @@ const (
 )
 
 type message struct {
-	url    string
+	URL    string
 	Action action
 }
 
@@ -63,7 +63,7 @@ type wsResponse struct {
 }
 
 func (h *hub) sendToChannel(channel string, message []byte) {
-	// Only send to clients subscribed to the request url
+	// Only send to clients subscribed to the request URL
 	subscriptions, ok := h.subscriptions[channel]
 	if !ok {
 		log.Printf("No subscriptions for '%s'\n", channel)
@@ -92,13 +92,13 @@ func (h *hub) sendToChannel(channel string, message []byte) {
 func (h *hub) handleMessage(conn *connection, m message) {
 	switch m.Action {
 	case Subscribe:
-		h.subscriptions.add(m.url, conn)
-		log.Println("Adding subscription to", m.url, "for", conn.User.Hash)
+		h.subscriptions.add(m.URL, conn)
+		log.Println("Adding subscription to", m.URL, "for", conn.User.Hash)
 
 	// Request actions perform an internal GET request and send the results to
 	// all subscribed clients
 	case Request:
-		req, err := http.NewRequest("GET", "http://localhost:8080"+m.url, nil)
+		req, err := http.NewRequest("GET", "http://localhost:8080"+m.URL, nil)
 		if err != nil {
 			log.Println(err)
 			return
@@ -123,7 +123,7 @@ func (h *hub) handleMessage(conn *connection, m message) {
 			log.Println(err)
 			return
 		}
-		h.sendToChannel(m.url, body)
+		h.sendToChannel(m.URL, body)
 	}
 }
 
