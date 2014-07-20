@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"text/template"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/russross/blackfriday"
@@ -17,6 +18,7 @@ var funcMap = template.FuncMap{
 	"markdown":        markDowner,
 	"initials":        initials,
 	"isAuthenticated": isAuthenticated,
+	"date":            date,
 }
 
 // Render returns a rendered template or JSON depending on the origin
@@ -70,4 +72,14 @@ func isAuthenticated(r *http.Request) bool {
 		return true
 	}
 	return false
+}
+
+func date(args ...interface{}) string {
+	if len(args) == 2 {
+		value := args[1].(time.Time)
+		layout := args[0].(string)
+		return value.Format(layout)
+	}
+
+	return args[0].(time.Time).Format("January 2, 2006 at 3:04PM")
 }
