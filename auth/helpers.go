@@ -54,12 +54,11 @@ func Deauthenticate(w http.ResponseWriter, r *http.Request) {
 
 // IsAuthenticated checks whether someone has been authenticated
 func IsAuthenticated(r *http.Request) bool {
-	session, _ := store.Get(r, "authenticated-user")
-	hash := session.Values["hash"]
-	if hash != nil {
-		return true
+	_, err := GetAuthenticatedUser(r)
+	if err != nil {
+		return false
 	}
-	return false
+	return true
 }
 
 // GetAuthenticatedUser returns a User object for an authenticated user
