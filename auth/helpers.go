@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -65,6 +66,10 @@ func IsAuthenticated(r *http.Request) bool {
 func GetAuthenticatedUser(r *http.Request) (*User, error) {
 	session, _ := store.Get(r, "authenticated-user")
 	hash := session.Values["hash"]
+	if hash == nil {
+		return nil, errors.New("User is not authenticated")
+	}
+
 	u, err := repo.Load(hash.(string))
 	if err != nil {
 		return nil, err
