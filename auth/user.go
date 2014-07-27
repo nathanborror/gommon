@@ -1,6 +1,10 @@
 package auth
 
-import "time"
+import (
+	"time"
+
+	"github.com/nathanborror/gommon/render"
+)
 
 // User defines a person in the system
 type User struct {
@@ -10,4 +14,8 @@ type User struct {
 	Password string    `json:"password"`
 	Created  time.Time `json:"created"`
 	Modified time.Time `json:"modified"`
+}
+
+func init() {
+	_ = render.RegisterTemplateFunction("isAuthenticated", IsAuthenticated)
 }

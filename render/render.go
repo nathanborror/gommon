@@ -2,23 +2,24 @@ package render
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"regexp"
 	"text/template"
 	"time"
 
 	"github.com/gorilla/sessions"
-	"github.com/russross/blackfriday"
 )
 
 var store = sessions.NewCookieStore([]byte("something-very-very-secret"))
 
 var funcMap = template.FuncMap{
-	"markdown":        markDowner,
-	"initials":        initials,
-	"isAuthenticated": isAuthenticated,
-	"date":            date,
+	"date": date,
+}
+
+// RegisterTemplateFunction registers functions to be used within templates
+func RegisterTemplateFunction(name string, function interface{}) (alreadyRegistered bool) {
+	_, alreadyRegistered = funcMap[name]
+	funcMap[name] = function
+	return alreadyRegistered
 }
 
 // Render returns a rendered template or JSON depending on the origin
@@ -51,27 +52,8 @@ func RenderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 func RenderJSON(w http.ResponseWriter, data interface{}) {
 	obj, _ := json.MarshalIndent(data, "", "  ")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(obj)
-}
-
-func markDowner(args ...interface{}) string {
-	s := blackfriday.MarkdownCommon([]byte(fmt.Sprintf("%s", args...)))
-	return string(s)
-}
-
-func initials(args ...interface{}) string {
-	s := fmt.Sprintf("%s", args...)
-	re := regexp.MustCompile("[^A-Z]")
-	return re.ReplaceAllString(s, "")
-}
-
-func isAuthenticated(r *http.Request) bool {
-	session, _ := store.Get(r, "authenticated-user")
-	hash := session.Values["hash"]
-	if hash != nil {
-		return true
-	}
-	return false
 }
 
 func date(args ...interface{}) string {
