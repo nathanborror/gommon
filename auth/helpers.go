@@ -76,3 +76,9 @@ func GetAuthenticatedUser(r *http.Request) (*User, error) {
 	}
 	return u, nil
 }
+
+// GetUser returns a user for a given hash
+func GetUser(hash string) *User {
+	u, _ := repo.Load(hash)
+	return u
+}

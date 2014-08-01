@@ -18,4 +18,5 @@ type User struct {
 
 func init() {
 	_ = render.RegisterTemplateFunction("isAuthenticated", IsAuthenticated)
+	_ = render.RegisterTemplateFunction("user", GetUser)
 }
