@@ -9,6 +9,11 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+// MarshalPreparable can supply an alternative value in preparation for marshalling
+type MarshalPreparable interface {
+	MarshalPrepare() interface{}
+}
+
 var store = sessions.NewCookieStore([]byte("something-very-very-secret"))
 
 var funcMap = template.FuncMap{
@@ -24,7 +29,7 @@ func RegisterTemplateFunction(name string, function interface{}) (alreadyRegiste
 
 // Render returns a rendered template or JSON depending on the origin
 // of the request
-func Render(w http.ResponseWriter, r *http.Request, tmpl string, context interface{}) {
+func Render(w http.ResponseWriter, r *http.Request, tmpl string, context map[string]interface{}) {
 	// TOOD: There is a better way to detect XHR requests,
 	// this is not that way.
 	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
@@ -35,22 +40,28 @@ func Render(w http.ResponseWriter, r *http.Request, tmpl string, context interfa
 }
 
 // RenderTemplate renders a given template along with any data passed
-func RenderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
+func RenderTemplate(w http.ResponseWriter, tmpl string, context map[string]interface{}) {
 	templates := template.New("").Funcs(funcMap)
 	_, err := templates.ParseGlob("templates/*")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	err = templates.ExecuteTemplate(w, tmpl+".html", data)
+	err = templates.ExecuteTemplate(w, tmpl+".html", context)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 // RenderJSON returns marshalled JSON
-func RenderJSON(w http.ResponseWriter, data interface{}) {
-	obj, _ := json.MarshalIndent(data, "", "  ")
+func RenderJSON(w http.ResponseWriter, context map[string]interface{}) {
+	for key, data := range context {
+		if preparable, ok := data.(MarshalPreparable); ok {
+			context[key] = preparable.MarshalPrepare()
+		}
+	}
+
+	obj, _ := json.MarshalIndent(context, "", "  ")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(obj)
