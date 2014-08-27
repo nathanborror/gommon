@@ -53,6 +53,7 @@ const (
 )
 
 type message struct {
+	Port   string
 	URL    string
 	Action action
 }
@@ -98,7 +99,7 @@ func (h *hub) handleMessage(conn *connection, m message) {
 	// Request actions perform an internal GET request and send the results to
 	// all subscribed clients
 	case Request:
-		req, err := http.NewRequest("GET", "http://localhost:8080"+m.URL, nil)
+		req, err := http.NewRequest("GET", "http://localhost:"+m.Port+m.URL, nil)
 		if err != nil {
 			log.Println(err)
 			return
