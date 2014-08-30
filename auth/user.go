@@ -8,12 +8,14 @@ import (
 
 // User defines a person in the system
 type User struct {
-	Hash     string    `json:"hash"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Password string    `json:"password"`
-	Created  time.Time `json:"created"`
-	Modified time.Time `json:"modified"`
+	Hash      string    `json:"hash"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	PushToken string    `json:"device_token"`
+	PushType  string    `json:"device_type"`
+	Created   time.Time `json:"created"`
+	Modified  time.Time `json:"modified"`
 }
 
 func init() {
