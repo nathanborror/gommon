@@ -1,7 +1,7 @@
 // Package hubspoke is a basic WebSocket publish / subscribe toolkit. It builds
 // off of gorilla/websocket's chat example. Clients can subscribe to URLs and
 // receive updates when they change.
-package hubspoke
+package spokes
 
 import (
 	"encoding/json"

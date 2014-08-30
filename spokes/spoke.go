@@ -1,4 +1,4 @@
-package hubspoke
+package spokes
 
 import (
 	"log"
