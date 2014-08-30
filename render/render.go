@@ -32,7 +32,7 @@ func RegisterTemplateFunction(name string, function interface{}) (alreadyRegiste
 func Render(w http.ResponseWriter, r *http.Request, tmpl string, context map[string]interface{}) {
 	// TOOD: There is a better way to detect XHR requests,
 	// this is not that way.
-	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" || r.URL.RawQuery == "json" {
 		RenderJSON(w, context)
 		return
 	}
