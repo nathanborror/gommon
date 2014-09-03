@@ -22,7 +22,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		http.Redirect(w, r, "/", http.StatusFound)
+		render.Redirect(w, r, "/")
 		return
 	}
 
@@ -43,7 +43,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		if email == "" && password == "" {
-			http.Redirect(w, r, "/register", http.StatusFound)
+			render.Redirect(w, r, "/register")
 			return
 		}
 
@@ -53,7 +53,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		// If user already exists, sign them in
 		if err == nil {
-			http.Redirect(w, r, "/", http.StatusFound)
+			render.Redirect(w, r, "/")
 			return
 		}
 
@@ -66,7 +66,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Auth user and redirect them
 		u, _ = Authenticate(email, password, w, r)
-		http.Redirect(w, r, "/", http.StatusFound)
+		render.Redirect(w, r, "/")
 		return
 	}
 
@@ -80,6 +80,6 @@ func LoginRequired(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc
 			fn(w, r)
 			return
 		}
-		http.Redirect(w, r, "/register", http.StatusFound)
+		render.Redirect(w, r, "/register")
 	}
 }

@@ -60,9 +60,23 @@ func RenderJSON(w http.ResponseWriter, context map[string]interface{}) {
 	}
 
 	obj, _ := json.MarshalIndent(context, "", "  ")
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(obj)
+}
+
+// Redirect will redirect to given url. If it's an XHR request it will
+// return JSON
+func Redirect(w http.ResponseWriter, r *http.Request, url string) {
+	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" || r.URL.RawQuery == "json" {
+		RenderJSON(w, map[string]interface{}{
+			"request": r,
+		})
+		return
+	}
+	http.Redirect(w, r, url, http.StatusFound)
+	return
 }
 
 func date(args ...interface{}) string {
