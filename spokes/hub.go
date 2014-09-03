@@ -1,4 +1,4 @@
-// Package hubspoke is a basic WebSocket publish / subscribe toolkit. It builds
+// Package spokes is a basic WebSocket publish / subscribe toolkit. It builds
 // off of gorilla/websocket's chat example. Clients can subscribe to URLs and
 // receive updates when they change.
 package spokes
@@ -11,33 +11,33 @@ import (
 )
 
 type hub struct {
-	connections   map[*connection]bool // Registered connections
-	incoming      chan wsRequest       // Inbound messages from the connections
-	register      chan *connection     // Register requests from the connections
-	unregister    chan *connection     // Unregister requests from connections
-	subscriptions subscriptions
+	Connections   map[*Connection]bool // Registered connections
+	Incoming      chan wsRequest       // Inbound messages from the connections
+	Register      chan *Connection     // Register requests from the connections
+	Unregister    chan *Connection     // Unregister requests from connections
+	Subscriptions Subscriptions
 }
 
 // Hub maintains the set of active connections and broadcasts messages to
-// subscribers. Use the Run function to start the Hub (i.e go hubspoke.Hub.Run())
+// subscribers. Use the Run function to start the Hub (i.e go spokes.Hub.Run())
 var Hub = hub{
-	connections:   make(map[*connection]bool),
-	incoming:      make(chan wsRequest),
-	register:      make(chan *connection),
-	unregister:    make(chan *connection),
-	subscriptions: subscriptions{},
+	Connections:   make(map[*Connection]bool),
+	Incoming:      make(chan wsRequest),
+	Register:      make(chan *Connection),
+	Unregister:    make(chan *Connection),
+	Subscriptions: Subscriptions{},
 }
 
-type subscriptions map[string]map[*connection]bool
+type Subscriptions map[string]map[*Connection]bool
 
-func (s subscriptions) add(channel string, c *connection) {
+func (s Subscriptions) add(channel string, c *Connection) {
 	if _, ok := s[channel]; !ok {
-		s[channel] = make(map[*connection]bool)
+		s[channel] = make(map[*Connection]bool)
 	}
 	s[channel][c] = true
 }
 
-func (s subscriptions) remove(c *connection) {
+func (s Subscriptions) remove(c *Connection) {
 	for _, subs := range s {
 		delete(subs, c)
 	}
@@ -65,7 +65,7 @@ type wsResponse struct {
 
 func (h *hub) sendToChannel(channel string, message []byte) {
 	// Only send to clients subscribed to the request URL
-	subscriptions, ok := h.subscriptions[channel]
+	subscriptions, ok := h.Subscriptions[channel]
 	if !ok {
 		log.Printf("No subscriptions for '%s'\n", channel)
 		return
@@ -85,15 +85,15 @@ func (h *hub) sendToChannel(channel string, message []byte) {
 		default:
 			close(c.send)
 			delete(subscriptions, c)
-			delete(h.connections, c)
+			delete(h.Connections, c)
 		}
 	}
 }
 
-func (h *hub) handleMessage(conn *connection, m message) {
+func (h *hub) handleMessage(conn *Connection, m message) {
 	switch m.Action {
 	case Subscribe:
-		h.subscriptions.add(m.URL, conn)
+		h.Subscriptions.add(m.URL, conn)
 		log.Println("Adding subscription to", m.URL, "for", conn.User.Hash)
 
 	// Request actions perform an internal GET request and send the results to
@@ -132,13 +132,13 @@ func (h *hub) handleMessage(conn *connection, m message) {
 func (h *hub) Run() {
 	for {
 		select {
-		case c := <-h.register:
-			h.connections[c] = true
-		case c := <-h.unregister:
-			delete(h.connections, c)
+		case c := <-h.Register:
+			h.Connections[c] = true
+		case c := <-h.Unregister:
+			delete(h.Connections, c)
 			close(c.send)
-			h.subscriptions.remove(c)
-		case r := <-h.incoming:
+			h.Subscriptions.remove(c)
+		case r := <-h.Incoming:
 			var m message
 			// TODO: handle unmarshalling errors
 			json.Unmarshal(r.message, &m)

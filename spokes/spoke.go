@@ -21,8 +21,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// connection is an middleman between the websocket connection and the hub.
-type connection struct {
+// Connection is an middleman between the websocket connection and the hub.
+type Connection struct {
 	ws     *websocket.Conn // The websocket connection.
 	send   chan []byte     // Buffered channel of outbound messages.
 	User   *auth.User
@@ -31,14 +31,14 @@ type connection struct {
 
 // wsRequest
 type wsRequest struct {
-	connection *connection
+	connection *Connection
 	message    []byte
 }
 
 // readPump pumps messages from the websocket connection to the hub.
-func (c *connection) readPump() {
+func (c *Connection) readPump() {
 	defer func() {
-		Hub.unregister <- c
+		Hub.Unregister <- c
 		c.ws.Close()
 	}()
 	c.ws.SetReadLimit(maxMessageSize)
@@ -49,18 +49,18 @@ func (c *connection) readPump() {
 		if err != nil {
 			break
 		}
-		Hub.incoming <- wsRequest{c, message}
+		Hub.Incoming <- wsRequest{c, message}
 	}
 }
 
 // write writes a message with the given message type and payload.
-func (c *connection) write(mt int, payload []byte) error {
+func (c *Connection) write(mt int, payload []byte) error {
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.ws.WriteMessage(mt, payload)
 }
 
 // writePump pumps messages from the hub to the websocket connection.
-func (c *connection) writePump() {
+func (c *Connection) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -115,8 +115,8 @@ func SpokeHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, _ := r.Cookie("authenticated-user")
 
 	// Create connection
-	c := &connection{send: make(chan []byte, 256), ws: ws, User: u, Cookie: cookie}
-	Hub.register <- c
+	c := &Connection{send: make(chan []byte, 256), ws: ws, User: u, Cookie: cookie}
+	Hub.Register <- c
 	go c.writePump()
 	c.readPump()
 }
