@@ -7,4 +7,5 @@ type UserRepository interface {
 	LoadWithEmail(email string) (*User, error)
 	Save(user *User) error
 	List(limit int) ([]*User, error)
+	Ping(user *User)
 }

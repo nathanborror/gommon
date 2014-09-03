@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/jmoiron/modl"
 	_ "github.com/mattn/go-sqlite3"
@@ -64,7 +65,6 @@ func (r *sqlUserRepository) Save(user *User) error {
 	n, err := r.dbmap.Update(user)
 	if err != nil {
 		panic(err)
-		return err
 	}
 	if n == 0 {
 		err = r.dbmap.Insert(user)
@@ -81,4 +81,9 @@ func (r *sqlUserRepository) List(limit int) ([]*User, error) {
 	objects := []*User{}
 	err := r.dbmap.Select(&objects, "SELECT * FROM user ORDER BY modified DESC LIMIT ?", limit)
 	return objects, err
+}
+
+func (r *sqlUserRepository) Ping(user *User) {
+	user.LastActive = time.Now()
+	r.dbmap.Update(user)
 }
