@@ -74,7 +74,7 @@ func (r *sqlTokenRepository) Push(users []string, message string, cert string, k
 	payload.Badge = 1 // TODO: Make this more accurate
 	payload.Sound = "bingbong.aiff"
 
-	client := apns.NewClient("gateway.sandbox.push.apple.com:2195", cert, key)
+	client := apns.NewClient("gateway.push.apple.com:2195", cert, key)
 
 	for _, token := range tokens {
 		pn := apns.NewPushNotification()
