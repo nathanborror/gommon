@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/nathanborror/gommon/render"
 )
@@ -11,7 +12,7 @@ var repo = AuthSQLRepository("db.sqlite3")
 // LoginHandler logs a user in
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		email := r.FormValue("email")
+		email := strings.TrimSpace(r.FormValue("email"))
 		password := r.FormValue("password")
 		u, err := Authenticate(email, password, w, r)
 		if err != nil {
@@ -38,8 +39,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 // RegisterHandler registers a new user
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		name := r.FormValue("name")
-		email := r.FormValue("email")
+		name := strings.TrimSpace(r.FormValue("name"))
+		email := strings.TrimSpace(r.FormValue("email"))
 		password := r.FormValue("password")
 
 		if email == "" && password == "" {
