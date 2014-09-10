@@ -28,6 +28,7 @@ var Hub = hub{
 	Subscriptions: Subscriptions{},
 }
 
+// Subscriptions holds all the subscribed clients
 type Subscriptions map[string]map[*Connection]bool
 
 func (s Subscriptions) add(channel string, c *Connection) {
@@ -67,7 +68,7 @@ func (h *hub) sendToChannel(channel string, message []byte) {
 	// Only send to clients subscribed to the request URL
 	subscriptions, ok := h.Subscriptions[channel]
 	if !ok {
-		log.Printf("No subscriptions for '%s'\n", channel)
+		log.Printf("[Spokes]: No subscriptions for '%s'\n", channel)
 		return
 	}
 	toWrap := json.RawMessage(message)
@@ -77,9 +78,11 @@ func (h *hub) sendToChannel(channel string, message []byte) {
 	}
 	body, err := json.Marshal(m)
 	if err != nil {
-		log.Println("Error marshalling channel message:", err)
+		log.Println("[Spokes]: Error marshalling channel message:", err)
 	}
 	for c := range subscriptions {
+		log.Println("[Spokes]: Sending to ", c.User.Hash)
+
 		select {
 		case c.send <- body:
 		default:
@@ -94,7 +97,8 @@ func (h *hub) handleMessage(conn *Connection, m message) {
 	switch m.Action {
 	case Subscribe:
 		h.Subscriptions.add(m.URL, conn)
-		log.Println("Adding subscription to", m.URL, "for", conn.User.Hash)
+		log.Println("[Spokes]: Adding subscription to", m.URL, "for", conn.User.Hash)
+		log.Println("[Spokes]:", len(h.Subscriptions), "subscriptions.")
 
 	// Request actions perform an internal GET request and send the results to
 	// all subscribed clients
