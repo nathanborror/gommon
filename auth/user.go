@@ -27,5 +27,6 @@ func (u User) IsActive() bool {
 func init() {
 	_ = render.RegisterTemplateFunction("isAuthenticated", IsAuthenticated)
 	_ = render.RegisterTemplateFunction("authenticatedUser", GetAuthenticatedUser)
+	_ = render.RegisterTemplateFunction("authenticatedUserHash", GetAuthenticatedUserHash)
 	_ = render.RegisterTemplateFunction("user", GetUser)
 }
