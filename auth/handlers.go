@@ -43,21 +43,26 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		email := strings.TrimSpace(r.FormValue("email"))
 		password := r.FormValue("password")
 
-		if email == "" && password == "" {
+		// If email or password are blank then redirect to register page
+		// TODO: provide a sensible error to people so they understand what
+		// they did wrong.
+		if email == "" || password == "" {
 			render.Redirect(w, r, "/register")
 			return
 		}
 
-		hash := GenerateUserHash(email)
+		// Check to see if person already exists by attempting to log them in.
 		passwordHash := GeneratePasswordHash(password)
 		u, err := Authenticate(email, password, w, r)
 
-		// If user already exists, sign them in
-		if err == nil {
+		// If they do exist, redirect them home else create a new user and
+		// log them into the site.
+		if u != nil {
 			render.Redirect(w, r, "/")
 			return
 		}
 
+		hash := GenerateUserHash(name)
 		u = &User{Email: email, Password: passwordHash, Hash: hash, Name: name}
 		err = repo.Save(u)
 		if err != nil {
