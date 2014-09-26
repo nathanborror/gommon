@@ -97,6 +97,12 @@ func (h *hub) handleMessage(conn *Connection, m message) {
 	switch m.Action {
 	case Subscribe:
 		h.Subscriptions.add(m.URL, conn)
+
+		if conn.User == nil {
+			log.Println("[Spokes]: User is nil which probably means they aren't logged in.")
+			return
+		}
+
 		log.Println("[Spokes]: Adding subscription to", m.URL, "for", conn.User.Hash)
 		log.Println("[Spokes]:", len(h.Subscriptions), "subscriptions.")
 
