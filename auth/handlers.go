@@ -76,16 +76,30 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.RenderTemplate(w, "auth_register", nil)
+	render.Render(w, r, "auth_register", nil)
 }
 
 // LoginRequired allows you to check for a logged in user on any handler
 func LoginRequired(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		hash, err := GetAuthenticatedUserHash(r)
+
+		_, err = repo.Load(hash)
+		if err != nil {
+			Deauthenticate(w, r)
+		}
+
 		if IsAuthenticated(r) {
 			fn(w, r)
 			return
 		}
-		render.Redirect(w, r, "/register")
+
+		if render.IsJSONRequest(r) {
+			render.RenderJSON(w, map[string]interface{}{
+				"error": "User not authenticated",
+			})
+		} else {
+			render.Redirect(w, r, "/register")
+		}
 	}
 }

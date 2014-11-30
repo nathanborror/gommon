@@ -20,6 +20,14 @@ var funcMap = template.FuncMap{
 	"date": date,
 }
 
+// IsJSONRequest returns true if the request is XMLHttpRequest or ?json
+func IsJSONRequest(r *http.Request) bool {
+	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" || r.URL.RawQuery == "json" {
+		return true
+	}
+	return false
+}
+
 // RegisterTemplateFunction registers functions to be used within templates
 func RegisterTemplateFunction(name string, function interface{}) (alreadyRegistered bool) {
 	_, alreadyRegistered = funcMap[name]
@@ -30,7 +38,7 @@ func RegisterTemplateFunction(name string, function interface{}) (alreadyRegiste
 // Render returns a rendered template or JSON depending on the origin
 // of the request
 func Render(w http.ResponseWriter, r *http.Request, tmpl string, context map[string]interface{}) {
-	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" || r.URL.RawQuery == "json" {
+	if IsJSONRequest(r) {
 		RenderJSON(w, context)
 		return
 	}
