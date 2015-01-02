@@ -81,7 +81,7 @@ func (h *hub) sendToChannel(channel string, message []byte) {
 		log.Println("[Spokes]: Error marshalling channel message:", err)
 	}
 	for c := range subscriptions {
-		log.Println("[Spokes]: Sending to ", c.User.Hash)
+		log.Println("[Spokes]: Sending to ", c.User.Key)
 
 		select {
 		case c.send <- body:
@@ -103,7 +103,7 @@ func (h *hub) handleMessage(conn *Connection, m message) {
 			return
 		}
 
-		log.Println("[Spokes]: Adding subscription to", m.URL, "for", conn.User.Hash)
+		log.Println("[Spokes]: Adding subscription to", m.URL, "for", conn.User.Key)
 		log.Println("[Spokes]:", len(h.Subscriptions), "subscriptions.")
 
 	// Request actions perform an internal GET request and send the results to

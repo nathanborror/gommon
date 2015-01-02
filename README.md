@@ -77,7 +77,7 @@ func main() {
 }
 ```
 
-Then in your handler create a list of auth.User.Hash and pass it into the
+Then in your handler create a list of auth.User.Key and pass it into the
 tokenRepo.Push method to send the message to APNS servers. Be sure to put
 your push certificate and key in the root directory of your project. You can use
 [this tutorial](http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tutorial-part-1)
@@ -100,7 +100,7 @@ func yourHandler() {
 
   ul := []string{}
   for _, u := range users {
-    ul = append(ul, u.Hash)
+    ul = append(ul, u.Key)
   }
 
   err = tokenRepo.Push(users, "Your push message", "YourCert.pem", "YourKey.pem")

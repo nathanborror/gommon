@@ -1,89 +1,91 @@
 package auth
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"os"
 	"time"
 
-	"github.com/jmoiron/modl"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3" // needed
 )
 
-type sqlUserRepository struct {
-	dbmap *modl.DbMap
+type sqlRepository struct {
+	db *sqlx.DB
 }
 
-// AuthSQLRepository returns a new sqlUserRepository or panics if it cannot
+// AuthSQLRepository returns a new sqlRepository or panics if it cannot
 func AuthSQLRepository(filename string) UserRepository {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sqlx.Connect("sqlite3", filename)
 	if err != nil {
 		panic("Error connecting to db: " + err.Error())
 	}
-	err = db.Ping()
-	if err != nil {
-		panic("Error connecting to db: " + err.Error())
+
+	repo := &sqlRepository{
+		db: db,
 	}
-	r := &sqlUserRepository{
-		dbmap: modl.NewDbMap(db, modl.SqliteDialect{}),
-	}
-	r.dbmap.TraceOn("", log.New(os.Stdout, "db: ", log.Lmicroseconds))
-	r.dbmap.AddTable(User{}).SetKeys(false, "hash")
-	r.dbmap.CreateTablesIfNotExists()
-	return r
+
+	schema := `CREATE TABLE IF NOT EXISTS user (
+		key text not null primary key,
+		name text,
+		email text,
+		password text,
+		created datetime,
+		modified datetime,
+		lastactive datetime
+	);`
+
+	_, err = repo.db.Exec(schema)
+	return repo
 }
 
-func (r *sqlUserRepository) Load(hash string) (*User, error) {
-	objects := []*User{}
-	err := r.dbmap.Select(&objects, "SELECT * FROM user WHERE hash=?", hash)
-	if len(objects) != 1 {
-		return nil, fmt.Errorf("expected 1 object, got %d", len(objects))
-	}
-	return objects[0], err
+func (r *sqlRepository) Get(key string) (*User, error) {
+	user := User{}
+	err := r.db.Get(&user, `SELECT * FROM user WHERE key = ?`, key)
+	return &user, err
 }
 
-func (r *sqlUserRepository) LoadWithPassword(email string, password string) (*User, error) {
-	objects := []*User{}
-	err := r.dbmap.Select(&objects, "SELECT * FROM user WHERE email=? AND password=?", email, password)
-	if len(objects) != 1 {
-		return nil, fmt.Errorf("expected 1 object, got %d", len(objects))
-	}
-	return objects[0], err
+func (r *sqlRepository) GetWithPassword(email string, password string) (*User, error) {
+	user := User{}
+	err := r.db.Get(&user, `SELECT * FROM user WHERE email = ? AND password = ?`, email, password)
+	return &user, err
 }
 
-func (r *sqlUserRepository) LoadWithEmail(email string) (*User, error) {
-	objects := []*User{}
-	err := r.dbmap.Select(&objects, "SELECT * FROM user WHERE email=?", email)
-	if len(objects) != 1 {
-		return nil, fmt.Errorf("expected 1 object, got %d", len(objects))
-	}
-	return objects[0], err
+func (r *sqlRepository) GetWithEmail(email string) (*User, error) {
+	user := User{}
+	err := r.db.Get(&user, `SELECT * FROM user WHERE email = ?`, email)
+	return &user, err
 }
 
-func (r *sqlUserRepository) Save(user *User) error {
-	n, err := r.dbmap.Update(user)
-	if err != nil {
-		panic(err)
-	}
-	if n == 0 {
-		err = r.dbmap.Insert(user)
-	}
+func (r *sqlRepository) Update(user *User) error {
+	user.Modified = time.Now()
+	statement := `UPDATE user SET name = :name, email = :email, password = :password, modified = :modified, lastactive = :lastactive WHERE key = :key`
+	_, err := r.db.NamedExec(statement, &user)
 	return err
 }
 
-func (r *sqlUserRepository) Delete(hash string) error {
-	_, err := r.dbmap.Exec("DELETE FROM user WHERE hash=?", hash)
+func (r *sqlRepository) Insert(user *User) error {
+	user.Created = time.Now()
+	user.Modified = time.Now()
+
+	statement := `INSERT INTO user
+			(key, name, email, password, created, modified, lastactive)
+		VALUES
+			(:key, :name, :email, :password, :created, :modified, :lastactive)`
+
+	_, err := r.db.NamedExec(statement, &user)
 	return err
 }
 
-func (r *sqlUserRepository) List(limit int) ([]*User, error) {
-	objects := []*User{}
-	err := r.dbmap.Select(&objects, "SELECT * FROM user ORDER BY modified DESC LIMIT ?", limit)
-	return objects, err
+func (r *sqlRepository) Delete(key string) error {
+	_, err := r.db.Exec(`DELETE FROM user WHERE key = ?`, key)
+	return err
 }
 
-func (r *sqlUserRepository) Ping(user *User) {
-	user.LastActive = time.Now()
-	r.dbmap.Update(user)
+func (r *sqlRepository) List(limit int) ([]*User, error) {
+	users := []*User{}
+	err := r.db.Select(&users, `SELECT * FROM user ORDER BY modified DESC LIMIT ?`, limit)
+	return users, err
+}
+
+func (r *sqlRepository) UpdateLastActive(key string) error {
+	_, err := r.db.Exec(`UPDATE user SET lastactive = ? WHERE key = ?`, time.Now(), key)
+	return err
 }

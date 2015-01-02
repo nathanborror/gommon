@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/nathanborror/gommon/crypto"
 	"github.com/nathanborror/gommon/render"
 )
 
@@ -52,26 +53,23 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check to see if person already exists by attempting to log them in.
-		passwordHash := GeneratePasswordHash(password)
-		u, err := Authenticate(email, password, w, r)
+		passwordHash := crypto.PasswordHash(password)
+		user, err := Authenticate(email, password, w, r)
 
 		// If they do exist, redirect them home else create a new user and
 		// log them into the site.
-		if u != nil {
+		if user != nil {
 			render.Redirect(w, r, "/")
 			return
 		}
 
-		hash := GenerateUserHash(name)
-		u = &User{Email: email, Password: passwordHash, Hash: hash, Name: name}
-		err = repo.Save(u)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		key := crypto.UniqueHash(name)
+		user = &User{Key: key, Name: name, Email: email, Password: passwordHash}
+		err = repo.Insert(user)
+		render.Check(err, w)
 
 		// Auth user and redirect them
-		u, _ = Authenticate(email, password, w, r)
+		user, _ = Authenticate(email, password, w, r)
 		render.Redirect(w, r, "/")
 		return
 	}
@@ -82,9 +80,9 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 // LoginRequired allows you to check for a logged in user on any handler
 func LoginRequired(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		hash, err := GetAuthenticatedUserHash(r)
+		key, err := GetAuthenticatedUserKey(r)
 
-		_, err = repo.Load(hash)
+		_, err = repo.Get(key)
 		if err != nil {
 			Deauthenticate(w, r)
 		}

@@ -8,7 +8,7 @@ import (
 
 // User defines a person in the system
 type User struct {
-	Hash       string    `json:"hash"`
+	Key        string    `json:"key"`
 	Name       string    `json:"name"`
 	Email      string    `json:"email"`
 	Password   string    `json:"password"`
@@ -27,6 +27,6 @@ func (u User) IsActive() bool {
 func init() {
 	_ = render.RegisterTemplateFunction("isAuthenticated", IsAuthenticated)
 	_ = render.RegisterTemplateFunction("authenticatedUser", GetAuthenticatedUser)
-	_ = render.RegisterTemplateFunction("authenticatedUserHash", GetAuthenticatedUserHash)
+	_ = render.RegisterTemplateFunction("authenticatedUserKey", GetAuthenticatedUserKey)
 	_ = render.RegisterTemplateFunction("user", GetUser)
 }
