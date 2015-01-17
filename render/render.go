@@ -9,6 +9,9 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+// Context represents a renderer context
+type Context map[string]interface{}
+
 // MarshalPreparable can supply an alternative value in preparation for marshalling
 type MarshalPreparable interface {
 	MarshalPrepare() interface{}
