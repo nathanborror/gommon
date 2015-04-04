@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -8,15 +9,17 @@ import (
 	"github.com/anachronistic/apns"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // Needed
+	"github.com/nathanborror/gommon/settings"
 )
 
 type sqlRepository struct {
 	db *sqlx.DB
 }
 
-// TokenSQLRepository returns a new sqlRepository or panics if it cannot
-func TokenSQLRepository(filename string) TokenRepository {
-	db, err := sqlx.Connect("sqlite3", filename)
+// SqlRepository returns a new sqlRepository or panics if it cannot
+func SqlRepository() TokenRepository {
+	settings := settings.NewSettings("settings.json")
+	db, err := sqlx.Connect(settings.DriverName(), settings.DataSource())
 	if err != nil {
 		panic("Error connecting to db: " + err.Error())
 	}
@@ -25,13 +28,18 @@ func TokenSQLRepository(filename string) TokenRepository {
 		db: db,
 	}
 
-	schema := `CREATE TABLE IF NOT EXISTS token (
+	datetime := "datetime"
+	if settings.DriverName() == "postgres" {
+		datetime = "timestamp with time zone"
+	}
+
+	schema := fmt.Springf(`CREATE TABLE IF NOT EXISTS token (
 		token text not null primary key,
 		platform text NULL,
 		user text NULL,
-		created datetime,
-		modified datetime
-	);`
+		created %s,
+		modified %s
+	);`, datetime, datetime)
 
 	_, err = repo.db.Exec(schema)
 	return repo
@@ -39,13 +47,18 @@ func TokenSQLRepository(filename string) TokenRepository {
 
 func (r *sqlRepository) Get(user string) ([]*Token, error) {
 	tokens := []*Token{}
-	err := r.db.Select(&tokens, `SELECT * FROM token WHERE user = ?`, user)
+	statement := fmt.Springf("SELECT * FROM token WHERE user = '%s'", user)
+	err := r.db.Select(&tokens, statement)
 	return tokens, err
 }
 
 func (r *sqlRepository) Update(token *Token) error {
 	token.Modified = time.Now()
-	statement := `UPDATE token SET token = :token, platform = :platform, modified = :modified WHERE user = :user`
+	statement := `UPDATE token
+		SET
+			token = :token, platform = :platform, modified = :modified
+		WHERE
+			user = :user`
 	_, err := r.db.NamedExec(statement, &token)
 	return err
 }
@@ -63,19 +76,32 @@ func (r *sqlRepository) Insert(token *Token) error {
 }
 
 func (r *sqlRepository) Delete(token string) error {
-	_, err := r.db.Exec("DELETE FROM token WHERE token = ?", token)
+	statement := fmt.Springf("DELETE FROM token WHERE token = '%s'", token)
+	_, err := r.db.Exec(statement)
 	return err
 }
 
 func (r *sqlRepository) List(users []string) ([]*Token, error) {
 	tokens := []*Token{}
-	err := r.db.Select(&tokens, "SELECT * FROM token WHERE user IN (?)", strings.Join(users, ", "))
+
+	for i := range users {
+		users[i] = "'" + users[i] + "'"
+	}
+
+	statement := fmt.Sprintf("SELECT * FROM token WHERE user IN (%s)", strings.Join(users, ", "))
+	err := r.db.Select(&tokens, statement)
 	return tokens, err
 }
 
 func (r *sqlRepository) Push(users []string, message string, cert string, key string) error {
 	tokens := []*Token{}
-	err := r.db.Select(&tokens, "SELECT * FROM token WHERE user IN (?)", strings.Join(users, ", "))
+
+	for i := range users {
+		users[i] = "'" + users[i] + "'"
+	}
+
+	statement := fmt.Springf("SELECT * FROM token WHERE user IN (%s)", strings.Join(users, ", "))
+	err := r.db.Select(&tokens, statement)
 	if err != nil {
 		return err
 	}

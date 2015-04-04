@@ -1,0 +1,9 @@
+// Example Settings
+
+{
+  "Database": {
+    "Kind": "postgres",
+    "Name": "YOUR_DATABASE_NAME",
+    "User": "YOUR_USER"
+  }
+}

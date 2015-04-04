@@ -14,7 +14,7 @@ type User struct {
 	Password   string    `json:"password"`
 	Created    time.Time `json:"created"`
 	Modified   time.Time `json:"modified"`
-	LastActive time.Time `json:"last_active"`
+	LastActive time.Time `json:"lastactive"`
 }
 
 // IsActive returns the duration of time since last active

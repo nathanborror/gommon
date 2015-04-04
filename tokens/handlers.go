@@ -7,8 +7,8 @@ import (
 	"github.com/nathanborror/gommon/render"
 )
 
-var repo = TokenSQLRepository("db.sqlite3")
-var userRepo = auth.AuthSQLRepository("db.sqlite3")
+var repo = SqlRepository()
+var userRepo = auth.SqlRepository()
 
 // SaveHandler saves a item
 func SaveHandler(w http.ResponseWriter, r *http.Request) {

@@ -89,8 +89,8 @@ import (
   "github.com/nathanborror/gommon/tokens"
 )
 
-var tokenRepo = tokens.TokenSQLRepository("db.sqlite3")
-var authRepo = auth.AuthSQLRepository("db.sqlite3")
+var tokenRepo = tokens.SqlRepository()
+var authRepo = auth.SqlRepository()
 
 func yourHandler() {
   users, err := authRepo.List(100)

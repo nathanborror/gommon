@@ -8,7 +8,7 @@ import (
 	"github.com/nathanborror/gommon/render"
 )
 
-var repo = AuthSQLRepository("db.sqlite3")
+var repo = SqlRepository()
 
 // LoginHandler logs a user in
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
