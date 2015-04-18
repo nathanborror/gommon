@@ -37,6 +37,9 @@ type ObjectMap map[string]interface{}
 // ObjectListMap is a map of all available object lists
 type ObjectListMap map[string]interface{}
 
+// GraphResponse is a map of response objects based on a given query
+type GraphResponse map[string]interface{}
+
 func unpack(s []string, vars ...*string) {
 	for i, str := range s {
 		*vars[i] = str
@@ -46,7 +49,7 @@ func unpack(s []string, vars ...*string) {
 // Query lets you use a GraphQL like syntax to query your database. For example
 // http://localhost?q=book(1){notes,editions} would return a JSON response with
 // a book object and a list of notes and editions that match the book's key.
-func Query(query string, objects ObjectMap, lists ObjectListMap) map[string]interface{} {
+func Query(query string, objects ObjectMap, lists ObjectListMap) GraphResponse {
 
 	// Database
 	settings := settings.NewSettings("settings.json")
@@ -61,7 +64,7 @@ func Query(query string, objects ObjectMap, lists ObjectListMap) map[string]inte
 	matches := re.FindAllStringSubmatch(query, -1)
 	unpack(matches[0], &raw, &node, &key, &rawChildren)
 
-	context := map[string]interface{}{}
+	context := GraphResponse{}
 
 	// Retrieve primary node
 	obj := objects[node]
