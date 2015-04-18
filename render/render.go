@@ -25,7 +25,9 @@ var funcMap = template.FuncMap{
 
 // IsJSONRequest returns true if the request is XMLHttpRequest or ?json
 func IsJSONRequest(r *http.Request) bool {
-	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" || r.URL.RawQuery == "json" {
+	json := r.FormValue("json")
+
+	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" || json == "true" {
 		return true
 	}
 	return false
