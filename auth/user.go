@@ -24,6 +24,19 @@ func (u User) IsActive() bool {
 	return dur.Seconds() < 300.0
 }
 
+// GetURL returns an absolute url
+func (u User) GetURL() string {
+	return "/users/" + u.Key
+}
+
+// MarshalPrepare output
+func (u User) MarshalPrepare() interface{} {
+	return struct {
+		User
+		URL string `json:"url"`
+	}{u, u.GetURL()}
+}
+
 func init() {
 	_ = render.RegisterTemplateFunction("isAuthenticated", IsAuthenticated)
 	_ = render.RegisterTemplateFunction("authenticatedUser", GetAuthenticatedUser)
