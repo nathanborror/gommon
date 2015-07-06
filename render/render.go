@@ -79,6 +79,14 @@ func RenderJSON(w http.ResponseWriter, context map[string]interface{}) {
 	w.Write(obj)
 }
 
+// RenderJSONError returns a JSON error
+func RenderJSONError(w http.ResponseWriter, code int, message string) {
+	RenderJSON(w, Context{
+		"code":    code,
+		"message": message,
+	})
+}
+
 // Redirect will redirect to given url. If it's an XHR request it will
 // return JSON
 func Redirect(w http.ResponseWriter, r *http.Request, url string) {
